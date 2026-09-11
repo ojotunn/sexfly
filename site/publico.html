@@ -32,6 +32,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:12.5p
 #topo .live i{width:8px;height:8px;border-radius:50%;background:#444}
 #topo .live.on{color:var(--up)}#topo .live.on i{background:var(--up);box-shadow:0 0 10px var(--up);animation:pulsa 1.6s infinite}
 #topo .live.off{color:var(--down)}#topo .live.off i{background:var(--down)}
+#topo .live.replay{color:#F2C14E}#topo .live.replay i{background:#F2C14E;box-shadow:0 0 10px #F2C14E}
+#dot.replay{background:#F2C14E}
 @keyframes pulsa{50%{opacity:.35}}
 #topo .dir{margin-left:auto;display:flex;align-items:center;gap:14px}
 #topo .ca{display:flex;align-items:center;gap:8px;border:1px solid var(--line2);padding:4px 9px;color:var(--muted);cursor:pointer;user-select:none;font-size:11px}
@@ -144,7 +146,7 @@ details p{margin:10px 0 0;line-height:1.55}
       <p class="lede">Two real fruit-fly brains, 138,639 neurons each, simulated live on one graphics card, and one couple that never stops. They have no wallet and place no orders. They only feel the buys and sells of their own token, and every trade changes how hard they go.</p>
 
       <h3>What you are watching</h3>
-      <p>The top of the screen is the two brains: hers on the left, his on the right. Every flash is one neuron crossing its firing threshold. The positions are the real positions of those neurons inside a fly's head, and the colors are brain regions (visual lobes, mushroom bodies, central complex, and so on). The wiring is the <b>FlyWire connectome</b>: every neuron and every synapse of an adult <i>Drosophila melanogaster</i>, reconstructed from electron-microscope images of one fly. This is not a drawing of a brain. It is the brain's own wiring diagram, running twice.</p>
+      <p>The top of the screen is the two brains: hers on the left, his on the right. Every flash is one neuron crossing its firing threshold. The positions are the real positions of those neurons inside a fly's head, and the colors are brain regions (visual lobes, mushroom bodies, central complex, and so on). The wiring is the <b>FlyWire connectome</b>: every neuron and every synapse of an adult <i>Drosophila melanogaster</i>, reconstructed from electron-microscope images of one fly. This is not a drawing of a brain. It is the brain's own wiring diagram, running twice. When the GPU rests, the page replays a recording of these same two brains, and the badge in the top bar reads REPLAY instead of LIVE.</p>
 
       <h3>The brains</h3>
       <p>We run each network as a <b>leaky integrate-and-fire</b> model, the one published by Shiu et al. in <i>Nature</i> (2024). Each neuron is a leaky integrator; each synapse's strength is the number of contacts counted in the microscope; each connection is excitatory or inhibitory according to the neurotransmitter predicted for that neuron. There is no training, no fitting, no hand-tuning toward any behavior. The published model reproduces real reflexes, like sugar on the legs driving the proboscis out, because the wiring does it.</p>
@@ -172,7 +174,7 @@ details p{margin:10px 0 0;line-height:1.55}
   <div id="stage">
     <div id="brain">
       <canvas id="c"></canvas>
-      <div id="hud"><h1>SEX FLY</h1><div class="sub">2 × 138,639 neurons &middot; every flash is a real neuron firing &middot; every thrust hits both brains</div><div id="hstate">loading…</div><div id="hstate2" class="ele">his brain: loading…</div></div><div id="rotulos"><span>SHE</span><span>HE</span></div>
+      <div id="hud"><h1>SEX FLY</h1><div class="sub" id="hudSub">2 × 138,639 neurons &middot; every flash is a real neuron firing &middot; every thrust hits both brains</div><div id="hstate">loading…</div><div id="hstate2" class="ele">his brain: loading…</div></div><div id="rotulos"><span>SHE</span><span>HE</span></div>
       <div id="status"><span id="stxt">connecting…</span><span id="dot"></span></div>
       <div id="cine" onclick="document.getElementById('app').classList.toggle('cinema');setTimeout(resize,50)">cinema mode</div>
       <div id="hint">drag to rotate</div>
@@ -363,7 +365,7 @@ function draw(ts){
   requestAnimationFrame(draw);
 }
 
-function setStatus(state,txt){ $('dot').className=state; $('stxt').textContent=txt; const t=$('liveTop'); if(t){ t.className='live '+(state==='live'?'on':'off'); $('liveTxt').textContent=state==='live'?'LIVE':'OFFLINE'; } }
+function setStatus(state,txt){ $('dot').className=state; $('stxt').textContent=txt; const t=$('liveTop'); if(t){ t.className='live '+(state==='live'?'on':(state==='replay'?'replay':'off')); $('liveTxt').textContent=state==='live'?'LIVE':(state==='replay'?'REPLAY':'OFFLINE'); } }
 
 function connectEle(){   // so no PC (porta 8435): o cerebro dele fala na 8436; no relay os dois chegam pela mesma conexao
   if(location.port!=='8435') return;
@@ -479,7 +481,7 @@ function updateUI(j){
   $('sSeiz').textContent=(j.seizures||0).toLocaleString();
   $('hstate').textContent=STATE_TEXT[j.state]||j.state;
   $('hstate').className=(j.state||'');
-  setStatus('live',`live · ${j.idx_total.toLocaleString()} neurons fired this frame`);
+  if(j.replay){ setStatus('replay','replay · the GPU is resting · recorded from these same two brains'); const hs=$('hudSub'); if(hs&&!hs.dataset.replay){ hs.dataset.replay='1'; hs.textContent='2 × 138,639 neurons · REPLAY: recorded from the real brains while the GPU rests'; } } else setStatus('live',`live · ${j.idx_total.toLocaleString()} neurons fired this frame`);
   for(const g of GROUPS){
     const hz=j.dn[g[0]]||0; smooth[g[0]]=smooth[g[0]]*0.6+hz*0.4;
     $('b_'+g[0]).style.width=Math.min(100,smooth[g[0]]/CAP_HZ*100)+'%';
