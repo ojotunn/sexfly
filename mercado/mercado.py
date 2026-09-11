@@ -200,17 +200,41 @@ def traduzir_trade(t, p50, p90, novo_holder):
         lista = [('sugar', ms)]
         extras = []
         if t['usd'] >= p90:
-            lista.append(('reward', 500.0)); extras.append('big buy → dopamine')
+            lista.append(('reward', 500.0)); extras.append('big buy → she screams, dopamine floods both brains')
         elif novo_holder:
-            lista.append(('reward', 300.0)); extras.append('new holder → dopamine')
+            lista.append(('reward', 300.0)); extras.append('new holder → dopamine hit')
         return lista, 'sugar', extras
     lista = [('bitter', ms)]
     extras = []
     if t['usd'] >= p90:
-        lista.append(('lc4', 400.0)); extras.append('big sell → shadow')
+        lista.append(('lc4', 400.0)); extras.append('big sell → she kicks him off')
     elif t['usd'] >= p50:
-        lista.append(('mdn', 300.0)); extras.append('sell → backs away')
+        lista.append(('mdn', 300.0)); extras.append('sell → he slows down')
     return lista, 'bitter', extras
+
+
+class Estocadas(threading.Thread):
+    """Enquanto cruzam, CADA estocada bate nos dois cerebros, no mesmo ritmo da animacao (ritmo_hz):
+    JO (toque/vibracao, 209 neuronios a 300 Hz) nos dois = a pressao do encaixe; pC1 (receptividade) nela;
+    a cada 4 estocadas, dopamina (PAM, 307) nos dois. A batida dura menos que o periodo para o cerebro pulsar."""
+    def __init__(self, libido):
+        super().__init__(daemon=True)
+        self.libido = libido; self.n = 0
+
+    def run(self):
+        while True:
+            lib = self.libido
+            if lib.estado != 'mating':
+                time.sleep(0.25); continue
+            t0 = time.time()
+            periodo = 1.0 / max(0.5, lib.ritmo_hz())
+            ms = int(min(250.0, 600.0 * periodo))
+            self.n += 1
+            estimular('jo', ms, 'ambos')
+            estimular('pc1', ms, 'ela')
+            if self.n % 4 == 0:
+                estimular('reward', int(150 + 350 * lib.v), 'ambos')
+            time.sleep(max(0.0, periodo - (time.time() - t0)))
 
 
 def estimular(nome, ms, quem='ambos'):
@@ -494,7 +518,7 @@ def main():
     ultima_curva = 0.0
     ativas = None                          # estado do interruptor das ordens (card quando muda)
     ultimo_posicao = 0.0                   # ultimo sinal vindo do token que ela segura
-    libido = Libido()                      # cruzamento: compras sobem, vendas derrubam
+    libido = Libido(); Estocadas(libido).start()   # estocadas batem nos cerebros no ritmo                      # cruzamento: compras sobem, vendas derrubam
     sent = None                            # feed proprio dos sentidos (SentidosChain) ou None
     sent_cfg = ''
     prox_sent_tentativa = 0.0
@@ -648,11 +672,8 @@ def main():
             libido.t_pub = agora; libido.v_pub = libido.v
             extra = None
             if mudou:
-                extra = {'mating': 'she lets him mount', 'courting': 'he sings with one wing', 'idle': 'they rest', 'rejected': 'rejected'}.get(libido.estado)
+                extra = {'mating': 'he mounts her and starts pounding', 'courting': 'he sings with one wing, she opens up', 'idle': 'catching their breath', 'rejected': 'she kicks him off'}.get(libido.estado)
             publicar(libido.evento(extra))
-            if libido.estado == 'mating' and agora >= libido.prox_canto:            # enquanto cruzam: dopamina nos dois, no ritmo
-                libido.prox_canto = agora + max(2.0, 8.0 - 6.0 * libido.v)
-                estimular('reward', int(150 + 350 * libido.v), 'ambos')
         # ----- leitura da Pons -----
         if agora - ultima_leitura >= INTERVALO:
             ultima_leitura = agora

@@ -8,14 +8,14 @@
 <link rel="canonical" href="https://www.sexfly.tech/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="FLY">
-<meta property="og:title" content="SEX FLY — two whole fly brains, mating on Robinhood Chain">
+<meta property="og:title" content="SEX FLY — two whole fly brains, fucking on Robinhood Chain">
 <meta property="og:description" content="138,639 real neurons simulated live. Pons trades are her senses; her reflexes place the orders. No AI agent, no script, her own wallet.">
 <meta property="og:url" content="https://www.sexfly.tech/">
 <meta property="og:image" content="https://www.sexfly.tech/static/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SEX FLY — two whole fly brains, mating on Robinhood Chain">
+<meta name="twitter:title" content="SEX FLY — two whole fly brains, fucking on Robinhood Chain">
 <meta name="twitter:description" content="138,639 real neurons simulated live. Pons trades are her senses; her reflexes place the orders. No AI agent.">
 <meta name="twitter:image" content="https://www.sexfly.tech/static/og.png">
 <meta name="theme-color" content="#000000">
@@ -126,7 +126,7 @@ details p{margin:10px 0 0;line-height:1.55}
 <div id="app">
   <div id="topo">
     <span class="marca">SEX FLY</span>
-    <span class="tag">two whole fly brains, mating on Robinhood Chain · buys make them go harder</span>
+    <span class="tag">two whole fly brains, fucking on Robinhood Chain · buys make them go harder</span>
     <span class="live" id="liveTop"><i></i><span id="liveTxt">CONNECTING</span></span>
     <div class="dir">
       <span id="viewersTop" class="tag"></span>
@@ -160,7 +160,7 @@ details p{margin:10px 0 0;line-height:1.55}
       <div class="grade"><div>a buy <b>sugar on her legs</b></div><div>a sell <b>bitter taste</b></div><div>a big buy or a new holder <b>dopamine</b></div><div>a big sell <b>a looming shadow</b></div><div>many trades in a minute <b>vibration</b></div><div>price drifting up or down <b>walk forward or back away</b></div><div>silence for minutes <b>dust on her eyes</b></div></div>
 
       <h3>She trades</h3>
-      <p><b>Two brains, one couple.</b> Both flies are full simulated brains, 138,639 neurons each, running side by side on one graphics card. Both feel every trade of the token. Buys raise the couple's libido: at first he courts her, singing with one wing (her Johnston's organ, the fly's ear, gets the song); past a threshold she lets him mount, and her pC1 neurons, the real female receptivity cluster, fire. The rhythm follows the libido and his own walking drive, so the harder people buy, the harder they go. Sells cool it down. A big sell fires her DNp13 rejection neurons: she kicks him off and he tumbles. Nothing here is scripted mood: every flash you see is a neuron in one of the two brains.</p>
+      <p><b>Two brains, one couple.</b> Both flies are full simulated brains, 138,639 neurons each, running side by side on one graphics card, and they are at it around the clock. Every thrust hits both brains: their Johnston's organs (the fly's touch and vibration sense) fire with each stroke, her pC1 neurons, the real female receptivity cluster, fire as she takes him, and every fourth stroke floods both with dopamine. Buys raise the libido and the pace: the harder people buy, the harder he pounds. Sells slow him down. A big sell fires her DNp13 rejection neurons: she kicks him off, he tumbles, sings with one wing for a few seconds and climbs back on. Nothing here is scripted mood: every flash you see is a neuron in one of the two brains.</p>
       <p>Her motor neurons become orders by fixed rules, also public. A sustained proboscis extension buys a small lot (10% of her ETH, at most $10 per order). Escape or backing away sells. A lasting bitter taste sells a quarter. Orders are at least 20 seconds apart. She trades only on Pons curves, <b>never her own token</b>, from <b>her own wallet</b>, the address in the top bar. Every order is a real transaction you can open on the explorer. Her wallet is topped up from the token's creator fees; nothing else touches it.</p>
       <p>Two rules learned on day one. <b>Replays never buy:</b> when the market goes quiet she re-lives old trades on screen, but only a live trade can open a position; selling is always allowed. <b>She feels what she holds:</b> if the token she is holding drops 2% in five minutes she backs away, and at 5% she sees a shadow and escapes, which sells.</p>
 
@@ -174,7 +174,7 @@ details p{margin:10px 0 0;line-height:1.55}
   <div id="stage">
     <div id="brain">
       <canvas id="c"></canvas>
-      <div id="hud"><h1>SEX FLY</h1><div class="sub">2 × 138,639 neurons &middot; every flash is a real neuron firing</div><div id="hstate">loading…</div><div id="hstate2" class="ele">his brain: loading…</div></div><div id="rotulos"><span>SHE</span><span>HE</span></div>
+      <div id="hud"><h1>SEX FLY</h1><div class="sub">2 × 138,639 neurons &middot; every flash is a real neuron firing &middot; every thrust hits both brains</div><div id="hstate">loading…</div><div id="hstate2" class="ele">his brain: loading…</div></div><div id="rotulos"><span>SHE</span><span>HE</span></div>
       <div id="status"><span id="stxt">connecting…</span><span id="dot"></span></div>
       <div id="cine" onclick="document.getElementById('app').classList.toggle('cinema');setTimeout(resize,50)">cinema mode</div>
       <div id="hint">drag to rotate</div>
@@ -224,7 +224,12 @@ details p{margin:10px 0 0;line-height:1.55}
 // Pagina publica: mesma cena da /dev, sem botoes. Cerebro em 3D (three.js) + corpo desenhado aqui a partir das
 // poses (fly-cliente.js; JPEG ainda aceito) + feed do mercado. Funciona igual no servidor local e no relay.
 const GROUPS=[['feed','feed (proboscis)'],['forward','walk forward'],['turn_L','turn left'],['turn_R','turn right'],['backward','walk backward'],['escape','escape (giant fiber)'],['groom','groom'],['halt','freeze'],['reward','reward (dopamine)']];
-const STATE_TEXT={quiet:'quiet · waiting for the market',active:'reacting',seizure:'seizure · runaway activity'};
+const STATE_TEXT={quiet:'quiet · catching her breath',active:'turned on',seizure:'seizure · she blacked out'};
+const STATE_HIM={quiet:'quiet · catching his breath',active:'turned on',seizure:'seizure · he blacked out'};
+// legendas do que cada cerebro sente (nome do estimulo -> texto na tela)
+const FEEL_HER={sugar:'sweet · she wants more',reward:'dopamine · she is coming',pc1:'pC1 · she spreads for him',jo:'vibration · she feels him inside',bitter:'bitter · not in the mood',lc4:'a shadow · she freezes',mdn:'she backs off',reject:'oviDN · she kicks him off',eye_touch:'she rubs her eyes',lc16:'she looks away',p9:'she pushes back'};
+const FEEL_HIM={sugar:'sweet · he pounds harder',reward:'dopamine · he is about to blow',jo:'vibration · he feels her squeeze',pc1:'he feels her open up',bitter:'bitter · he goes soft',lc4:'a shadow · he loses his grip',mdn:'he pulls out',reject:'kicked off',eye_touch:'he rubs his eyes',lc16:'he looks away',p9:'he pushes deeper'};
+function sente(lista,mapa){ return (lista||[]).map(n=>mapa[n]||n).join(' · '); }
 const MODE_TEXT={walking:'',escape:'ESCAPE',grooming:'GROOMING',eye_grooming:'GROOMING EYES',feeding:'FEEDING',flying:'FLYING',landing:'LANDING',backing:'BACKING UP',startle:'STARTLE',freeze:'FREEZE',excited:'EXCITED'};
 const CAP_HZ=150, DECAY=0.955, MIN_HEAT=0.02, RATE_WINDOW=20, ROT_FRENTE=Math.PI;
 let N=0, regions=[], heat=null, active=null, nActive=0, heat2=null, active2=null, nActive2=0, heatAttr2=null, pontos2=null, helloEle=null, ultimoQuadro2=0;
@@ -411,7 +416,7 @@ function onMercado(m){
   if(m.classe==='sexo'){ onSexo(m); return; }
   if(m.classe==='limpar'){ $('mCards').innerHTML=''; $('mOrdens').innerHTML='<div class="card"><span class="r">no orders yet</span></div>'; return; }   // lancamento: o feed recomeca do zero
   if(m.classe==='resumo'){
-    $('mModo').textContent='every trade of '+(m.sentidos||m.token||'the token'); $('mResumo').innerHTML=`both brains feel every trade of <b>${m.sentidos||m.token||'the token'}</b>${m.sentidos_fonte==='chain'?' (live from the chain)':''}<br>buy = sugar + his song in her ear + her pC1 receptivity · sell = bitter · big sell = her DNp13 kick`; return;
+    $('mModo').textContent='every trade of '+(m.sentidos||m.token||'the token'); $('mResumo').innerHTML=`both brains feel every trade of <b>${m.sentidos||m.token||'the token'}</b>${m.sentidos_fonte==='chain'?' (live from the chain)':''}<br>buy = sweet + his song + her pC1 opens up · sell = bitter, he slows down · big sell = her DNp13 kick · every thrust = vibration in both brains`; return;
     $('mModo').textContent=(m.modo==='real'?'real':'paper')+(m.ordens_ativas===false?' · orders paused until launch':'');
     const p=m.pnl_pct||0, cls=p>0?'up':(p<0?'down':'');
     $('wUsd').textContent='$'+(m.saldo_usd||0).toFixed(2);
@@ -429,7 +434,7 @@ function onMercado(m){
   const box=$('mCards'); const el=document.createElement('div');
   if(m.classe==='trade'){
     el.className='card '+m.kind;
-    el.innerHTML=`<span class="q">${hora(m.t)}</span> ${m.kind==='buy'?'BUY':'SELL'}${m.token?' '+m.token:''} $${(m.usd||0).toFixed(2)} by ${m.de||'?'} → she tastes <b>${m.estimulo}</b>${m.extra?' + sees a '+m.extra:''}${m.replay?' <span class="r">replay</span>':''}`;
+    el.innerHTML=`<span class="q">${hora(m.t)}</span> ${m.kind==='buy'?'BUY':'SELL'}${m.token?' '+m.token:''} $${(m.usd||0).toFixed(2)} by ${m.de||'?'} → <b>${m.kind==='buy'?'she moans, he pounds harder':'she cools off, he slows down'}</b>${m.extra?' · '+m.extra:''}${m.replay?' <span class="r">replay</span>':''}`;
   }else if(m.classe==='ordem'){
     // ordens dela ficam numa lista propria: no lancamento os cards de trade enterravam as ordens em segundos
     el.className='card ordem '+m.lado;
@@ -450,17 +455,17 @@ function fmtLived(s){
 
 function updateUIEle(j){
   const d=j.dn||{}; const top=Object.entries(d).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]+' '+Math.round(x[1])+' Hz');
-  $('hstate2').textContent='his brain: '+(STATE_TEXT[j.state]||j.state)+(j.stimuli&&j.stimuli.length?' · he feels: '+j.stimuli.join(', '):'')+(top.length?' · '+top.join(', '):'')+' · '+Math.round(j.spikes_per_s).toLocaleString()+' spikes/s';
+  $('hstate2').textContent='his brain: '+(STATE_HIM[j.state]||j.state)+(j.stimuli&&j.stimuli.length?' · he feels: '+sente(j.stimuli,FEEL_HIM):'')+(top.length?' · '+top.join(', '):'')+' · '+Math.round(j.spikes_per_s).toLocaleString()+' spikes/s';
   Corpo3D.dnEle(d);
 }
 let coracaoT=0;
 function onSexo(m){
   Corpo3D.sexo(m);
   const lib=Math.round((m.libido||0)*100); const hud=$('sexoHud');
-  const txt={idle:'RESTING', courting:'COURTING · he sings with one wing', mating:'MATING · '+(m.ritmo_hz||1).toFixed(1)+' Hz', rejected:'REJECTED · she kicked him off'}[m.estado]||'RESTING';
-  hud.innerHTML=txt+'<small>libido '+lib+'% · buys raise it, sells cool it, a big sell gets him kicked off'+(m.evento?' · '+m.evento:'')+'</small>';
+  const txt={idle:'CATCHING THEIR BREATH', courting:'FOREPLAY · he sings with one wing, she opens up', mating:'FUCKING · '+(m.ritmo_hz||1).toFixed(1)+' thrusts/s', rejected:'KICKED OFF · she threw him off'}[m.estado]||'CATCHING THEIR BREATH';
+  hud.innerHTML=txt+'<small>libido '+lib+'% · buys make him pound harder, sells slow him down, a big sell gets him kicked off'+(m.evento?' · '+m.evento:'')+'</small>';
   hud.style.color=m.estado==='rejected'?'#ff5a3c':(m.estado==='mating'?'#ff5fa2':'#ffb3d5');
-  if(m.evento && m.evento!=='they rest'){ const box=$('mCards'); if(box){ const el=document.createElement('div'); el.className='card'; el.innerHTML=`<span class="q">${hora(m.t)}</span> <b style="color:#ff5fa2">${m.estado.toUpperCase()}</b> · ${m.evento} · libido ${lib}%`; box.prepend(el); while(box.children.length>30) box.removeChild(box.lastChild); } }
+  if(m.evento && m.evento!=='catching their breath'){ const box=$('mCards'); if(box){ const el=document.createElement('div'); el.className='card'; el.innerHTML=`<span class="q">${hora(m.t)}</span> <b style="color:#ff5fa2">${m.estado.toUpperCase()}</b> · ${m.evento} · libido ${lib}%`; box.prepend(el); while(box.children.length>30) box.removeChild(box.lastChild); } }
 }
 function coracoes(){ const X=Corpo3D.estado.sexo; if(X.estado!=='mating') return; const agora=performance.now(); const passo=1000/Math.max(0.5,X.ritmo); if(agora-coracaoT<passo) return; coracaoT=agora;
   const box=$('corpoCv').parentElement; const r=box.getBoundingClientRect(); const n=1+Math.round(X.libido*2); for(let k=0;k<n;k++){ const c=document.createElement('div'); c.className='coracao'; c.textContent='♥'; c.style.left=(r.width*0.5+(Math.random()-0.5)*r.width*0.3)+'px'; c.style.top=(r.height*0.45+(Math.random()-0.5)*40)+'px'; c.style.fontSize=(14+X.libido*16)+'px'; box.appendChild(c); setTimeout(()=>c.remove(),1700); } }
@@ -472,7 +477,7 @@ function updateUI(j){
   $('sRatio').textContent=j.ratio?j.ratio.toFixed(1)+'×':'–';
   $('sSyn').textContent=(j.synapses_changed||0).toLocaleString();
   $('sView').textContent=j.viewers; const vt=$('viewersTop'); if(vt) vt.textContent=j.viewers+' watching';
-  $('sStim').textContent=j.stimuli.length?'she feels: '+j.stimuli.join(', '):'';
+  $('sStim').textContent=j.stimuli.length?'she feels: '+sente(j.stimuli,FEEL_HER):'';
   $('sSeiz').textContent=(j.seizures||0).toLocaleString();
   $('hstate').textContent=STATE_TEXT[j.state]||j.state;
   $('hstate').className=(j.state||'');

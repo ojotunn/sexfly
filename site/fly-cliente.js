@@ -150,7 +150,7 @@ window.Corpo3D=(function(){
   const POSES={ // deslocamento do macho em relacao a ela [x para tras, y para o lado, z para cima], guinada, arfagem
     idle:     {p:[-2.6, 1.3, 0.0],  yaw: 0.45, pitch: 0.0},
     courting: {p:[-2.1, 0.9, 0.0],  yaw: 0.25, pitch: 0.0},
-    mating:   {p:[-0.42, 0.0, 0.92], yaw: 0.0, pitch:-0.12},
+    mating:   {p:[-0.60, 0.0, 0.90], yaw: 0.0, pitch:-0.10},
     rejected: {p:[-3.4,-1.4, 0.0],  yaw:-0.6, pitch: 0.0},
   };
   function desenharMacho(q, tt){
@@ -161,7 +161,7 @@ window.Corpo3D=(function(){
     const lib=X.libido, ritmo=X.ritmo*(1+0.25*Math.min(1,(X.dnEle.forward||0)/120));   // o cerebro dele acelera o ritmo
     let px=X.pose.p[0], py=X.pose.p[1], pz=X.pose.p[2], yaw=X.pose.yaw, pitch=X.pose.pitch, roll=0;
     const qM=S.qM; qM.set(q);
-    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.10*(0.4+0.6*lib); px+=amp*f; pz+=0.03*f; pitch+=-0.06*f; X.empurrao=amp*f*0.5; X.rabo=0.45+(0.35+0.3*lib)*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
+    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.10*(0.4+0.6*lib); px+=amp*f; pz+=0.03*f; pitch+=-0.06*f; X.empurrao=amp*f*0.5; X.rabo=0.32+(0.33+0.27*lib)*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
       const ab=0.22+0.12*lib+0.06*Math.sin(tt*2*Math.PI*ritmo*2); if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=ab; qM[S.asas.joint_RWing_abre]+=ab; qM[S.asas.joint_LWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); qM[S.asas.joint_RWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); }
       if(S.asas.joint_Head!=null) qM[S.asas.joint_Head]+=0.15+0.1*Math.max(0,f);
       if(S.asas.joint_Proboscis!=null) qM[S.asas.joint_Proboscis]+=0.5*Math.max(0,Math.sin(tt*2*Math.PI*ritmo*0.5));   // lambe a nuca dela
@@ -185,7 +185,7 @@ window.Corpo3D=(function(){
     RB.makeRotationAxis(EX, -ang); T1.makeTranslation(PV.x,PV.y,PV.z); T2.makeTranslation(-PV.x,-PV.y,-PV.z);
     for(const b of S.abd){ const W=S.matrizM[b]; W.premultiply(T2).premultiply(RB).premultiply(T1); S.objsM[b].matrix.copy(W); S.objsME[b].matrix.copy(W); }
   }
-  function sexo(ev){ const X=S.sexo; if(ev.estado && ev.estado!==X.estado){ X.estado=ev.estado; X.t_est=performance.now(); } if(typeof ev.libido==='number') X.libido=ev.libido; if(ev.ritmo_hz) X.ritmo=ev.ritmo_hz; }
+  function sexo(ev){ const X=S.sexo; if(ev.estado && ev.estado!==X.estado){ X.estado=ev.estado; X.t_est=performance.now(); } if(typeof ev.libido==='number') X.libido=ev.libido; if(ev.ritmo_hz && ev.ritmo_hz!==X.ritmo){ const ag=performance.now(); const ph=(((ag-X.t0)/1000*X.ritmo)%1+1)%1; X.ritmo=ev.ritmo_hz; X.t0=ag-ph/X.ritmo*1000; } }
   function dnEle(dn){ S.sexo.dnEle=dn||{}; }
   return {init, quadro, sexo, dnEle, tick:loop, estado:S};
 })();
