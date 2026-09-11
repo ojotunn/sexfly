@@ -1,0 +1,10 @@
+py/
+brain/data/
+brain/vendor/
+corpo/
+mercado/
+brand/
+*.pkl
+*.log
+__pycache__/
+bat_teste.*

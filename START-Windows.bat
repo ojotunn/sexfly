@@ -16,9 +16,10 @@ set FLY_MERCADO_MAX_ORDEM_USD=10
 set FLY_MERCADO_ORDEM=0.10
 rem so no modo papel: saldo virtual inicial em ETH
 set FLY_MERCADO_SALDO_ETH=0.05
-echo ==== FLY - cerebro (porta 8435) + corpo 3D ====
+echo ==== SEXFLY - ela (8435) + ele (8436) + corpo 3D + mercado ====
 echo Abra http://localhost:8435 no navegador. Ctrl+C aqui encerra o cerebro e salva as sinapses.
-start "FLY corpo 3D" "py\Scripts\python.exe" "corpo\corpo.py"
-start "FLY mercado" "py\Scripts\python.exe" "mercado\mercado.py"
+start "SEXFLY ele (cerebro do macho)" cmd /c "set FLY_QUEM=ele&& set FLY_PORT=8436&& py\Scripts\python.exe brain\servidor.py"
+start "SEXFLY corpo 3D" "py\Scripts\python.exe" "corpo\corpo.py"
+start "SEXFLY mercado" "py\Scripts\python.exe" "mercado\mercado.py"
 "py\Scripts\python.exe" "brain\servidor.py"
 pause

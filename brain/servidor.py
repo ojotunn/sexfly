@@ -18,6 +18,7 @@ from motor import Cerebro, ESTIMULOS_BLOQUEADOS  # noqa: E402
 from relay_cliente import Uplink                 # noqa: E402
 
 PORTA = int(os.environ.get('FLY_PORT', '8435'))
+QUEM = os.environ.get('FLY_QUEM', 'ela')                       # 'ela' (femea, corpo e mercado) ou 'ele' (macho): dois processos, um por cerebro
 RELAY_URL = os.environ.get('FLY_RELAY_URL', '')            # ex.: wss://fly.up.railway.app/fonte (relay/servidor.py)
 RELAY_TOKEN = os.environ.get('FLY_RELAY_TOKEN', '')
 AMBIENTE_HZ = float(os.environ.get('FLY_AMBIENTE_HZ', '0'))   # 0: ruido difuso prende a rede em crise
@@ -48,7 +49,7 @@ def empacotar(cab, idx):
 def mensagem_ola(app):
     cerebro = app['cerebro']
     return {
-        'tipo': 'ola', 'n': cerebro.n, 'synapses': cerebro.n_sinapses, 'device': cerebro.device,
+        'tipo': 'ola', 'quem': QUEM, 'n': cerebro.n, 'synapses': cerebro.n_sinapses, 'device': cerebro.device,
         'stimuli': {k: {'rate': cerebro.stim_rate[k], 'neurons': int(len(v)),
                         'description': cerebro.stim_desc[k]} for k, v in cerebro.stim_idx.items()
                     if k not in ESTIMULOS_BLOQUEADOS},
@@ -57,7 +58,7 @@ def mensagem_ola(app):
     }
 
 
-ARQ_CONFIG = DADOS / 'estado' / 'config.json'     # CA do token e link do X (publicos), sobrevivem a reinicio
+ARQ_CONFIG = DADOS / 'estado' / 'config.json'   # so 'ela' grava/serve config, mercado e corpo     # CA do token e link do X (publicos), sobrevivem a reinicio
 
 
 def ler_config():
@@ -108,6 +109,7 @@ async def transmitir(app):
         pps = q['passos_por_s'] or 0.0
         cab = {
             'tipo': 'quadro',
+            'quem': QUEM,
             't': round(q['t_cerebro'], 3),
             'lived': round(q['vivo_s'], 3),
             'brain_ms': round(q['seg_cerebro'] * 1000, 2),
@@ -375,7 +377,7 @@ def reservar_cpu():
 def main():
     reservar_cpu()
     cerebro = Cerebro(
-        dir_dados=DADOS / 'flywire', dir_estado=DADOS / 'estado',
+        dir_dados=DADOS / 'flywire', dir_estado=DADOS / 'estado' / QUEM,
         meta_parquet=DADOS / 'neuronios.parquet',
         plasticidade=PLASTICIDADE, ambiente_hz=AMBIENTE_HZ,
     )

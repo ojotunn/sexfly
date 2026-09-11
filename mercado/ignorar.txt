@@ -1,2 +1,1 @@
-# lancamento 2026-09-07 21:34: ela nunca opera o proprio token
-0x84b3fb8c00de5a8c72bcf7edbab7eb88cea0faf1
+# sexfly: ela nunca opera o proprio token (o CA entra no lancamento)

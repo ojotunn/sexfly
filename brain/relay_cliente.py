@@ -2,6 +2,7 @@
 # ultimo quadro do cerebro, o ultimo quadro do corpo e os eventos do mercado; recebe de la quantos assistem.
 # Quadros binarios nao enfileiram: se a internet atrasar, o mais novo substitui o anterior (sem lag acumulado).
 import asyncio
+import os
 import json
 from collections import deque
 
@@ -69,7 +70,7 @@ class Uplink:
         while True:
             try:
                 async with aiohttp.ClientSession() as sess:
-                    async with sess.ws_connect(self.url, params={'token': self.token}, heartbeat=20,
+                    async with sess.ws_connect(self.url, params={'token': self.token, 'quem': os.environ.get('FLY_QUEM', 'ela')}, heartbeat=20,
                                                max_msg_size=16 * 1024 * 1024) as ws:
                         self.ligado, espera, self.erro = True, 1, ''
                         print(f'[relay] ligado a {self.url}', flush=True)

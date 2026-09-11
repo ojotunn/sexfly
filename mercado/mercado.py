@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from sentidos_chain import SentidosChain   # noqa: E402
 
 SERVIDOR = os.environ.get('FLY_SERVIDOR', 'http://localhost:8435')
+SERVIDOR_ELE = os.environ.get('FLY_SERVIDOR_ELE', 'http://localhost:8436')   # o cerebro do macho: sente o mercado igual
 WS_URL = SERVIDOR.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws?papel=mercado'
 GECKO = 'https://api.geckoterminal.com/api/v2/networks/robinhood'
 INTERVALO = float(os.environ.get('FLY_MERCADO_INTERVALO', '15'))          # s entre leituras da Pons
@@ -212,12 +213,57 @@ def traduzir_trade(t, p50, p90, novo_holder):
     return lista, 'bitter', extras
 
 
-def estimular(nome, ms):
-    try:
-        http_json(SERVIDOR + '/api/estimulo', {'estimulo': nome, 'ms': ms}, timeout=5)
-        return True
-    except Exception:
-        return False
+def estimular(nome, ms, quem='ambos'):
+    """Manda o estimulo para o cerebro dela, dele ou dos dois (os dois sentem o mercado)."""
+    ok = False
+    for alvo in (['ela', 'ele'] if quem == 'ambos' else [quem]):
+        try:
+            http_json((SERVIDOR if alvo == 'ela' else SERVIDOR_ELE) + '/api/estimulo', {'estimulo': nome, 'ms': ms}, timeout=5)
+            ok = True
+        except Exception:
+            pass
+    return ok
+
+
+class Libido:
+    """Medidor do cruzamento: compra sobe (pelo tamanho relativo ao p90), venda derruba, decai em ~90 s.
+    Estados: idle (< 0.06) -> courting (< 0.18) -> mating; venda grande = chute (rejected) por 6 s."""
+    def __init__(self):
+        self.v = 0.0; self.estado = 'idle'; self.chute_ate = 0.0; self.t_pub = 0.0; self.v_pub = -1.0; self.est_pub = ''
+        self.ultimo_t = time.time(); self.prox_canto = 0.0
+
+    def compra(self, usd, p90):
+        self.v = min(1.0, self.v + 0.12 + 0.28 * min(1.0, usd / max(p90, 1e-9)))
+
+    def venda(self, usd, p50, p90):
+        if usd >= p90:
+            self.v = max(0.0, self.v - 0.6); self.chute_ate = time.time() + 6.0
+            return 'chute'
+        self.v = max(0.0, self.v - (0.25 if usd >= p50 else 0.10))
+        return 'esfria'
+
+    def passo(self):
+        agora = time.time(); dt = agora - self.ultimo_t; self.ultimo_t = agora
+        self.v = max(0.0, self.v - dt / 90.0)
+        if agora < self.chute_ate:
+            novo = 'rejected'
+        elif self.v >= 0.18 or (self.estado == 'mating' and self.v >= 0.10):
+            novo = 'mating'
+        elif self.v >= 0.06:
+            novo = 'courting'
+        else:
+            novo = 'idle'
+        mudou = novo != self.estado; self.estado = novo
+        return mudou
+
+    def ritmo_hz(self):
+        return round(0.8 + 5.2 * self.v, 2)
+
+    def evento(self, extra=None):
+        ev = {'classe': 'sexo', 'libido': round(self.v, 3), 'estado': self.estado, 'ritmo_hz': self.ritmo_hz()}
+        if extra:
+            ev['evento'] = extra
+        return ev
 
 
 def publicar(ev):
@@ -450,6 +496,7 @@ def main():
     ultima_curva = 0.0
     ativas = None                          # estado do interruptor das ordens (card quando muda)
     ultimo_posicao = 0.0                   # ultimo sinal vindo do token que ela segura
+    libido = Libido()                      # cruzamento: compras sobem, vendas derrubam
     sent = None                            # feed proprio dos sentidos (SentidosChain) ou None
     sent_cfg = ''
     prox_sent_tentativa = 0.0
@@ -468,6 +515,14 @@ def main():
         for t in novos:
             historico.append(t)
             ultimo_trade_real = agora
+            if t['kind'] == 'buy':
+                libido.compra(t['usd'], p90)
+                if libido.estado in ('courting', 'mating'):
+                    estimular('jo', 300.0, 'ela'); estimular('pc1', 250.0, 'ela')     # cancao dele no orgao de Johnston + receptividade
+            else:
+                if libido.venda(t['usd'], p50, p90) == 'chute':
+                    estimular('reject', 400.0, 'ela'); estimular('lc4', 400.0, 'ele')  # ela rejeita (DNp13), ele ve a sombra
+                    publicar(libido.evento('big sell: she kicks him off'))
             novo_holder = t['kind'] == 'buy' and t['de'] not in enderecos
             enderecos.add(t['de'])
             lista, nome, extras = traduzir_trade(t, p50, p90, novo_holder)
@@ -589,6 +644,17 @@ def main():
             time.sleep(INTERVALO)
             continue
 
+        # ----- cruzamento: decaimento, estados e evento para a pagina -----
+        mudou = libido.passo()
+        if mudou or agora - libido.t_pub >= 3.0 or abs(libido.v - libido.v_pub) >= 0.05:
+            libido.t_pub = agora; libido.v_pub = libido.v
+            extra = None
+            if mudou:
+                extra = {'mating': 'she lets him mount', 'courting': 'he sings with one wing', 'idle': 'they rest', 'rejected': 'rejected'}.get(libido.estado)
+            publicar(libido.evento(extra))
+            if libido.estado == 'mating' and agora >= libido.prox_canto:            # enquanto cruzam: dopamina nos dois, no ritmo
+                libido.prox_canto = agora + max(2.0, 8.0 - 6.0 * libido.v)
+                estimular('reward', int(150 + 350 * libido.v), 'ambos')
         # ----- leitura da Pons -----
         if agora - ultima_leitura >= INTERVALO:
             ultima_leitura = agora

@@ -65,12 +65,14 @@ async def fonte(request):
         raise web.HTTPForbidden(text='token')
     ws = web.WebSocketResponse(max_msg_size=16 * 1024 * 1024, heartbeat=20)
     await ws.prepare(request)
-    velho = app['estado'].get('fonte')
+    quem = 'ele' if request.query.get('quem') == 'ele' else 'ela'     # dois cerebros: ela (principal) e ele
+    chave = 'fonte' if quem == 'ela' else 'fonte_ele'
+    velho = app['estado'].get(chave)
     if velho is not None and not velho.closed:
         await velho.close()
-    app['estado']['fonte'] = ws
+    app['estado'][chave] = ws
     app['estado']['fonte_t'] = time.time()
-    print('[relay] fonte conectada', flush=True)
+    print(f'[relay] fonte conectada ({quem})', flush=True)
 
     async def contar():
         while not ws.closed:
@@ -88,8 +90,10 @@ async def fonte(request):
                 cab = cabecalho(msg.data)
                 tipo = cab.get('tipo')
                 if tipo == 'quadro':
-                    app['estado']['quadro'] = (cab, msg.data)
+                    app['estado']['quadro' if quem == 'ela' else 'quadro_ele'] = (cab, msg.data)
                 elif tipo == 'corpo':
+                    if quem != 'ela':
+                        continue
                     app['estado']['corpo'] = msg.data
                 espalhar(app, 'b', msg.data)
             elif msg.type == web.WSMsgType.TEXT:
@@ -98,7 +102,9 @@ async def fonte(request):
                 except Exception:
                     continue
                 if m.get('tipo') == 'ola':
-                    app['estado']['ola'] = msg.data
+                    app['estado']['ola' if quem == 'ela' else 'ola_ele'] = msg.data
+                    continue
+                if quem != 'ela':                        # o macho so manda quadros; config/mercado/corpo vem dela
                     continue
                 if m.get('tipo') == 'config':            # CA e X vindos do PC: guarda (injeta na pagina) e espalha ao vivo
                     app['estado']['config'] = {'ca': str(m.get('ca', '')), 'x': str(m.get('x', ''))}
@@ -117,9 +123,9 @@ async def fonte(request):
                 espalhar(app, 't', msg.data)
     finally:
         contador.cancel()
-        if app['estado'].get('fonte') is ws:
-            app['estado']['fonte'] = None
-        print('[relay] fonte desconectada', flush=True)
+        if app['estado'].get(chave) is ws:
+            app['estado'][chave] = None
+        print(f'[relay] fonte desconectada ({quem})', flush=True)
     return ws
 
 
@@ -143,12 +149,16 @@ async def ws_handler(request):
     est = app['estado']
     if est.get('ola'):
         e.enviar(('t', est['ola']))
+    if est.get('ola_ele'):
+        e.enviar(('t', est['ola_ele']))
     if est.get('config'):
         e.enviar(('t', json.dumps(dict(est['config'], tipo='config'), separators=(',', ':'))))
     if est.get('corpo'):
         e.enviar(('b', est['corpo']))
     if est.get('quadro'):
         e.enviar(('b', est['quadro'][1]))
+    if est.get('quadro_ele'):
+        e.enviar(('b', est['quadro_ele'][1]))
     if est.get('resumo'):
         e.enviar(('t', est['resumo']))
     for ev in list(est['ordens'])[-6:]:
@@ -188,7 +198,7 @@ async def versao(request):
 
 async def saude(request):
     est = request.app['estado']
-    return web.json_response({'ok': True, 'fonte': est.get('fonte') is not None, 'instancia': INSTANCIA,
+    return web.json_response({'ok': True, 'fonte': est.get('fonte') is not None, 'fonte_ele': est.get('fonte_ele') is not None, 'instancia': INSTANCIA,
                               'fonte_ha_s': round(time.time() - est.get('fonte_t', 0)) if est.get('fonte_t') else None,
                               'viewers': len(request.app['espectadores'])})
 
@@ -216,7 +226,8 @@ def main():
     app = web.Application()
     app['espectadores'] = set()
     app['estado'] = {'ola': None, 'quadro': None, 'corpo': None, 'resumo': None, 'eventos': deque(maxlen=200),
-                     'ordens': deque(maxlen=50), 'fonte': None, 'fonte_t': 0.0, 'config': None}
+                     'ordens': deque(maxlen=50), 'fonte': None, 'fonte_t': 0.0, 'config': None,
+                     'fonte_ele': None, 'ola_ele': None, 'quadro_ele': None}
     app.router.add_get('/', index)
     app.router.add_get('/ws', ws_handler)
     app.router.add_get('/fonte', fonte)

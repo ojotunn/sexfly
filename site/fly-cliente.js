@@ -13,7 +13,8 @@ window.Corpo3D=(function(){
   const ATRASO_MS=50;                 // renderiza um pouco atras do ultimo quadro para interpolar entre dois
   const S={pronto:false, ren:null, scene:null, cam:null, mosca:null, espelho:null, corpos:[], objs:[], objsE:[],
            juntas:[], matriz:[], q:[null,null], t:[0,0], cams:[null,null], nq:0, fovy:45, canvas:null, box:null,
-           ultimo:0, qi:null, erro:null};
+           ultimo:0, qi:null, erro:null, macho:null, espelhoM:null, objsM:[], objsME:[], matrizM:[], raiz:-1, qM:null,
+           sexo:{libido:0, estado:'idle', ritmo:1, t0:performance.now(), t_est:performance.now(), pose:null, alvo:null, dnEle:{}}, asas:{}};
   const M=new THREE.Matrix4(), M2=new THREE.Matrix4(), M3=new THREE.Matrix4(), Q=new THREE.Quaternion();
   const V=new THREE.Vector3(), V2=new THREE.Vector3(), UM=new THREE.Vector3(1,1,1);
 
@@ -65,18 +66,25 @@ window.Corpo3D=(function(){
     });
     S.mosca=new THREE.Group(); S.espelho=new THREE.Group(); S.espelho.scale.set(1,1,-1);
     S.scene.add(S.mosca); S.scene.add(S.espelho);
+    S.macho=new THREE.Group(); S.espelhoM=new THREE.Group(); S.espelhoM.scale.set(1,1,-1); S.scene.add(S.macho); S.scene.add(S.espelhoM);   // o macho: mesma malha, corpo proprio
     S.corpos=j.corpos; S.juntas=j.corpos.map(()=>[]); j.juntas.forEach(jt=>S.juntas[jt.corpo].push(jt));
     S.matriz=j.corpos.map(()=>new THREE.Matrix4());
     S.objs=j.corpos.map(()=>{ const o=new THREE.Object3D(); o.matrixAutoUpdate=false; S.mosca.add(o); return o; });
     S.objsE=j.corpos.map(()=>{ const o=new THREE.Object3D(); o.matrixAutoUpdate=false; S.espelho.add(o); return o; });
+    S.matrizM=j.corpos.map(()=>new THREE.Matrix4());
+    S.objsM=j.corpos.map(()=>{ const o=new THREE.Object3D(); o.matrixAutoUpdate=false; S.macho.add(o); return o; });
+    S.objsME=j.corpos.map(()=>{ const o=new THREE.Object3D(); o.matrixAutoUpdate=false; S.espelhoM.add(o); return o; });
+    j.juntas.forEach(jt=>{ if(jt.tipo===0) S.raiz=jt.qadr; if(jt.nome) S.asas[jt.nome]=jt.qadr; });
     for(const g of j.geoms){
       const mk=new THREE.Mesh(geos[g.malha], mats[g.mat]); mk.matrixAutoUpdate=false; TR(g.pos,g.quat,mk.matrix); mk.renderOrder=2; S.objs[g.corpo].add(mk);
       const me=new THREE.Mesh(geos[g.malha], matsE[g.mat]); me.matrixAutoUpdate=false; me.matrix.copy(mk.matrix); me.renderOrder=0; S.objsE[g.corpo].add(me);
+      const m2=new THREE.Mesh(geos[g.malha], mats[g.mat]); m2.matrixAutoUpdate=false; m2.matrix.copy(mk.matrix); m2.renderOrder=2; S.objsM[g.corpo].add(m2);
+      const m2e=new THREE.Mesh(geos[g.malha], matsE[g.mat]); m2e.matrixAutoUpdate=false; m2e.matrix.copy(mk.matrix); m2e.renderOrder=0; S.objsME[g.corpo].add(m2e);
     }
     // chao preto de verdade (sem luz, senao vira uma laje cinza), um pouco translucido para o reflexo aparecer por baixo
     const chao=new THREE.Mesh(new THREE.PlaneGeometry(600,600), new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.80, depthWrite:false}));
     chao.renderOrder=1; S.scene.add(chao);
-    S.qi=new Float32Array(S.nq);
+    S.qi=new Float32Array(S.nq); S.qM=new Float32Array(S.nq);
     redimensionar(); new ResizeObserver(redimensionar).observe(S.box);
   }
 
@@ -88,10 +96,11 @@ window.Corpo3D=(function(){
   }
 
   // cinematica direta: corpo = pai * T(pos)R(quat) * juntas(q); a junta livre da raiz vem inteira do qpos
-  function aplicar(q){
+  function aplicar(q){ aplicarEm(q, S.objs, S.objsE, S.matriz, null); }
+  function aplicarEm(q, objs, objsE, matriz, raizM){
     for(let b=0;b<S.corpos.length;b++){
-      const c=S.corpos[b], jl=S.juntas[b], W=S.matriz[b];
-      if(jl.length && jl[0].tipo===0){ const a=jl[0].qadr; W.compose(V.set(q[a],q[a+1],q[a+2]), Q.set(q[a+4],q[a+5],q[a+6],q[a+3]).normalize(), UM); }
+      const c=S.corpos[b], jl=S.juntas[b], W=matriz[b];
+      if(jl.length && jl[0].tipo===0){ const a=jl[0].qadr; if(raizM) W.copy(raizM); else W.compose(V.set(q[a],q[a+1],q[a+2]), Q.set(q[a+4],q[a+5],q[a+6],q[a+3]).normalize(), UM); }
       else{
         TR(c.pos,c.quat,W);
         for(const jt of jl){ const a=jt.qadr;
@@ -99,9 +108,9 @@ window.Corpo3D=(function(){
           else if(jt.tipo===2){ M.makeTranslation(jt.eixo[0]*q[a],jt.eixo[1]*q[a],jt.eixo[2]*q[a]); W.multiply(M); }
           else if(jt.tipo===1){ M.makeTranslation(jt.pos[0],jt.pos[1],jt.pos[2]); M2.makeRotationFromQuaternion(Q.set(q[a+1],q[a+2],q[a+3],q[a]).normalize()); M3.makeTranslation(-jt.pos[0],-jt.pos[1],-jt.pos[2]); W.multiply(M).multiply(M2).multiply(M3); }
         }
-        if(c.pai>=0) W.premultiply(S.matriz[c.pai]);
+        if(c.pai>=0) W.premultiply(matriz[c.pai]);
       }
-      S.objs[b].matrix.copy(W); S.objsE[b].matrix.copy(W);
+      objs[b].matrix.copy(W); objsE[b].matrix.copy(W);
     }
   }
 
@@ -125,12 +134,50 @@ window.Corpo3D=(function(){
       const c0=S.cams[0], c1=S.cams[1]; let daz=c1[3]-c0[3]; daz=((daz+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
       c=[c0[0]+(c1[0]-c0[0])*alpha, c0[1]+(c1[1]-c0[1])*alpha, c0[2]+(c1[2]-c0[2])*alpha, c0[3]+daz*alpha, c1[4], c1[5]];
     }
-    aplicar(q);
+    // ela: asas um pouco abertas quando aceita (femea receptiva abre as asas)
+    const X=S.sexo; const tt=(performance.now()-X.t0)/1000; const qEla=(X.estado==='mating')?abrirAsas(q, 0.25+0.1*Math.sin(tt*2*Math.PI*X.ritmo)):q;
+    aplicar(qEla);
+    desenharMacho(qEla, tt);
     const az=c[3], el=c[4], d=c[5];
     S.cam.position.set(c[0]+d*Math.cos(el)*Math.cos(az), c[1]+d*Math.cos(el)*Math.sin(az), c[2]+d*Math.sin(el));
     S.cam.lookAt(c[0],c[1],c[2]);
     S.ren.render(S.scene, S.cam);
   }
 
-  return {init, quadro, estado:S};
+  const RM=new THREE.Matrix4(), RO=new THREE.Matrix4(), RQ=new THREE.Quaternion(), RE=new THREE.Euler();
+  function abrirAsas(q, ab){ const o=S.qM; o.set(q); if(S.asas.joint_LWing_abre!=null){ o[S.asas.joint_LWing_abre]+=ab; o[S.asas.joint_RWing_abre]+=ab; } return o; }
+  const POSES={ // deslocamento do macho em relacao a ela [x para tras, y para o lado, z para cima], guinada, arfagem
+    idle:     {p:[-2.6, 1.3, 0.0],  yaw: 0.45, pitch: 0.0},
+    courting: {p:[-2.1, 0.9, 0.0],  yaw: 0.25, pitch: 0.0},
+    mating:   {p:[-0.62, 0.0, 0.98], yaw: 0.0, pitch:-0.32},
+    rejected: {p:[-3.4,-1.4, 0.0],  yaw:-0.6, pitch: 0.0},
+  };
+  function desenharMacho(q, tt){
+    if(S.raiz<0) return;
+    const X=S.sexo; const est=X.estado; const alvo=POSES[est]||POSES.idle; const u=Math.min(1,(performance.now()-X.t_est)/700);
+    if(!X.pose) X.pose={p:alvo.p.slice(), yaw:alvo.yaw, pitch:alvo.pitch};
+    const k=1-Math.pow(0.001, 1/60); for(let i=0;i<3;i++) X.pose.p[i]+=(alvo.p[i]-X.pose.p[i])*k*1.4; X.pose.yaw+=(alvo.yaw-X.pose.yaw)*k*1.4; X.pose.pitch+=(alvo.pitch-X.pose.pitch)*k*1.4;
+    const lib=X.libido, ritmo=X.ritmo*(1+0.25*Math.min(1,(X.dnEle.forward||0)/120));   // o cerebro dele acelera o ritmo
+    let px=X.pose.p[0], py=X.pose.p[1], pz=X.pose.p[2], yaw=X.pose.yaw, pitch=X.pose.pitch, roll=0;
+    const qM=S.qM; qM.set(q);
+    if(est==='mating'){ const f=Math.sin(tt*2*Math.PI*ritmo); px+=0.16*(0.35+0.65*lib)*f; pz+=0.05*Math.abs(f); pitch+=0.08*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
+      const ab=0.22+0.12*lib+0.06*Math.sin(tt*2*Math.PI*ritmo*2); if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=ab; qM[S.asas.joint_RWing_abre]+=ab; qM[S.asas.joint_LWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); qM[S.asas.joint_RWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); }
+      if(S.asas.joint_Head!=null) qM[S.asas.joint_Head]+=0.15+0.1*Math.max(0,f);
+      if(S.asas.joint_Proboscis!=null) qM[S.asas.joint_Proboscis]+=0.5*Math.max(0,Math.sin(tt*2*Math.PI*ritmo*0.5));   // lambe a nuca dela
+      for(const perna of ['LF','LM','LH','RF','RM','RH']){ const f=S.asas['joint_'+perna+'Femur'], ti=S.asas['joint_'+perna+'Tibia']; if(f!=null) qM[f]-=0.35; if(ti!=null) qM[ti]+=0.45; }   // pernas agarradas nela
+    } else if(est==='courting'){ const vib=Math.sin(tt*2*Math.PI*24)*0.22; if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=1.15+vib; qM[S.asas.joint_LWing_bate]+=vib*0.5; }   // canta com uma asa
+      px+=0.15*Math.sin(tt*2*Math.PI*0.6); py+=0.25*Math.sin(tt*2*Math.PI*0.35); yaw+=0.15*Math.sin(tt*2*Math.PI*0.4);
+    } else if(est==='rejected'){ const w=Math.min(1,u*1.6); pz+=1.8*Math.sin(Math.PI*w); roll=2*Math.PI*w*1.5; pitch+=Math.PI*w*0.3;   // chutado: voa para tras dando cambalhota
+      if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=0.9; qM[S.asas.joint_RWing_abre]+=0.9; }
+    } else { py+=0.05*Math.sin(tt*2*Math.PI*0.3); if(S.asas.joint_Head!=null) qM[S.asas.joint_Head]+=0.08*Math.sin(tt*2*Math.PI*0.5); }
+    // raiz do macho = raiz dela x deslocamento (no referencial dela: x para a frente, z para cima)
+    const a=S.raiz; RM.compose(V.set(q[a],q[a+1],q[a+2]), Q.set(q[a+4],q[a+5],q[a+6],q[a+3]).normalize(), UM);
+    RO.compose(V.set(px,py,pz), RQ.setFromEuler(RE.set(roll,pitch,yaw,'ZYX')), V2.set(0.9,0.9,0.9));
+    RM.multiply(RO);
+    if(est!=='mating' && est!=='rejected'){ const e=RM.elements; e[14]=Math.max(e[14], q[a+2]*0.98); }   // no chao: nao afunda quando ela esta inclinada
+    aplicarEm(qM, S.objsM, S.objsME, S.matrizM, RM);
+  }
+  function sexo(ev){ const X=S.sexo; if(ev.estado && ev.estado!==X.estado){ X.estado=ev.estado; X.t_est=performance.now(); } if(typeof ev.libido==='number') X.libido=ev.libido; if(ev.ritmo_hz) X.ritmo=ev.ritmo_hz; }
+  function dnEle(dn){ S.sexo.dnEle=dn||{}; }
+  return {init, quadro, sexo, dnEle, tick:loop, estado:S};
 })();

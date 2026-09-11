@@ -14,6 +14,8 @@ ENTRADAS = {
     'mdn':       (r'^MDN$',                 100.0, 'MDN backward-walking command neurons (4): backing up'),
     'vinegar':   (r'^ORN_(DM1|DM4|VA2)$',    60.0, 'Vinegar smell (BLOCKED: traps the network)'),
     'heat':      (r'^TRN_VP2$',             100.0, 'Hot cells (BLOCKED: traps the network)'),
+    'pc1':       (r'^pC1[a-e]$',            100.0, 'pC1 neurons (10): female receptivity, she lets him mount'),
+    'reject':    (r'^(DNp13|oviDN.*)$',     100.0, 'DNp13 + oviDN (8): rejection, she kicks him off'),
 }
 # Medido em 06/09/2026 (400 ms, plasticidade off): olfato (175 ORNs a 30 Hz) e calor (7 neuronios a 50 Hz)
 # levam a rede ao estado preso de ~460 mil spikes/s, igual ao odor Or56a. Tudo que entra pelo lobo antenal
