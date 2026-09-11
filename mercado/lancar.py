@@ -56,7 +56,7 @@ def main():
     # o relay guarda a propria lista de cards: limpa la tambem (token de relay.token) e as paginas abertas zeram
     try:
         token = (AQUI.parent / 'relay.token').read_text().strip()
-        req = urllib.request.Request(f'https://www.flybrain.finance/fonte/limpar?token={token}', data=b'{}', method='POST',
+        req = urllib.request.Request(f'https://sexfly-production.up.railway.app/fonte/limpar?token={token}', data=b'{}', method='POST',
                                      headers={'Content-Type': 'application/json'})
         with urllib.request.urlopen(req, timeout=15) as r:
             print('     feed limpo (relay):', json.loads(r.read().decode('utf-8')))
