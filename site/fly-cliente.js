@@ -15,7 +15,7 @@ window.Corpo3D=(function(){
            juntas:[], matriz:[], q:[null,null], t:[0,0], cams:[null,null], nq:0, fovy:45, canvas:null, box:null,
            ultimo:0, qi:null, erro:null, macho:null, espelhoM:null, objsM:[], objsME:[], matrizM:[], raiz:-1, qM:null,
            sexo:{libido:0, estado:'idle', ritmo:1, t0:performance.now(), t_est:performance.now(), pose:null, alvo:null, dnEle:{}}, asas:{},
-           aj:{raboBase:-0.12, raboAmp:0.22, pitch:-0.2, alvo:1.05}};   // ajustes da montada (medidos 11/09): abdomen dele quase reto no recuo e curvado 0,1-0,3 rad no pico, nariz para cima 0,2, ponta dele encosta 5% alem da ponta dela (sem atravessar)
+           aj:{raboBase:0.45, raboAmp:0.35, pitch:-0.15, alvo:1.05}};   // ajustes da montada (11/09): ele fica ACIMA dela (corpo nao atravessa as asas dela), abdomen curvado 0,45 rad no recuo e 0,8-1,0 no pico, nariz para cima 0,15; a calibracao poe a ponta dele 5% alem da ponta dela
   const M=new THREE.Matrix4(), M2=new THREE.Matrix4(), M3=new THREE.Matrix4(), Q=new THREE.Quaternion();
   const V=new THREE.Vector3(), V2=new THREE.Vector3(), UM=new THREE.Vector3(1,1,1);
 
@@ -137,7 +137,7 @@ window.Corpo3D=(function(){
       c=[c0[0]+(c1[0]-c0[0])*alpha, c0[1]+(c1[1]-c0[1])*alpha, c0[2]+(c1[2]-c0[2])*alpha, c0[3]+daz*alpha, c1[4], c1[5]];
     }
     // ela: asas um pouco abertas quando aceita (femea receptiva abre as asas)
-    const X=S.sexo; const tt=(performance.now()-X.t0)/1000; let qEla=q; if(X.estado==='mating'){ qEla=abrirAsas(q, 0.25+0.1*Math.sin(tt*2*Math.PI*X.ritmo)); if(S.raiz>=0 && X.empurrao){ const a=S.raiz; const rq=new THREE.Quaternion(q[a+4],q[a+5],q[a+6],q[a+3]).normalize(); const dir=new THREE.Vector3(1,0,0).applyQuaternion(rq); qEla[a]+=dir.x*X.empurrao; qEla[a+1]+=dir.y*X.empurrao; } }
+    const X=S.sexo; const tt=(performance.now()-X.t0)/1000; let qEla=q; if(X.estado==='mating'){ qEla=abrirAsas(q, 0.04+0.03*Math.sin(tt*2*Math.PI*X.ritmo)); if(S.raiz>=0 && X.empurrao){ const a=S.raiz; const rq=new THREE.Quaternion(q[a+4],q[a+5],q[a+6],q[a+3]).normalize(); const dir=new THREE.Vector3(1,0,0).applyQuaternion(rq); qEla[a]+=dir.x*X.empurrao; qEla[a+1]+=dir.y*X.empurrao; } }
     aplicar(qEla);
     desenharMacho(qEla, tt);
     const az=c[3], el=c[4], d=c[5];
