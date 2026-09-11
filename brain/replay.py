@@ -44,7 +44,7 @@ class Fita:
                     continue
                 if m.get('tipo') == 'ola':
                     self.ola = m
-                elif m.get('tipo') == 'mercado' and m.get('classe') != 'limpar':
+                elif m.get('tipo') == 'mercado' and m.get('classe') in ('sexo', 'resumo'):   # trades gravados NAO voltam como novos
                     self.passos.append((dt, 't', m))
             else:
                 try:
