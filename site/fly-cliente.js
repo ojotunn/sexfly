@@ -150,7 +150,7 @@ window.Corpo3D=(function(){
   const POSES={ // deslocamento do macho em relacao a ela [x para tras, y para o lado, z para cima], guinada, arfagem
     idle:     {p:[-2.6, 1.3, 0.0],  yaw: 0.45, pitch: 0.0},
     courting: {p:[-2.1, 0.9, 0.0],  yaw: 0.25, pitch: 0.0},
-    mating:   {p:[-0.78, 0.0, 0.66], yaw: 0.0, pitch: 0.06},
+    mating:   {p:[-0.42, 0.0, 0.92], yaw: 0.0, pitch:-0.12},
     rejected: {p:[-3.4,-1.4, 0.0],  yaw:-0.6, pitch: 0.0},
   };
   function desenharMacho(q, tt){
@@ -161,11 +161,11 @@ window.Corpo3D=(function(){
     const lib=X.libido, ritmo=X.ritmo*(1+0.25*Math.min(1,(X.dnEle.forward||0)/120));   // o cerebro dele acelera o ritmo
     let px=X.pose.p[0], py=X.pose.p[1], pz=X.pose.p[2], yaw=X.pose.yaw, pitch=X.pose.pitch, roll=0;
     const qM=S.qM; qM.set(q);
-    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.10*(0.4+0.6*lib); px+=amp*f; pz+=0.03*f; pitch+=-0.06*f; X.empurrao=amp*f*0.5; X.rabo=(0.55+0.35*lib)*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
+    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.10*(0.4+0.6*lib); px+=amp*f; pz+=0.03*f; pitch+=-0.06*f; X.empurrao=amp*f*0.5; X.rabo=0.45+(0.35+0.3*lib)*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
       const ab=0.22+0.12*lib+0.06*Math.sin(tt*2*Math.PI*ritmo*2); if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=ab; qM[S.asas.joint_RWing_abre]+=ab; qM[S.asas.joint_LWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); qM[S.asas.joint_RWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); }
       if(S.asas.joint_Head!=null) qM[S.asas.joint_Head]+=0.15+0.1*Math.max(0,f);
       if(S.asas.joint_Proboscis!=null) qM[S.asas.joint_Proboscis]+=0.5*Math.max(0,Math.sin(tt*2*Math.PI*ritmo*0.5));   // lambe a nuca dela
-      for(const perna of ['LF','LM','LH','RF','RM','RH']){ const fe=S.asas['joint_'+perna+'Femur'], ti=S.asas['joint_'+perna+'Tibia'], cx=S.asas['joint_'+perna+'Coxa']; const tipo=perna[1]; if(tipo==='F'){ if(cx!=null) qM[cx]-=0.55; if(fe!=null) qM[fe]-=0.75; if(ti!=null) qM[ti]+=0.95; } else if(tipo==='M'){ if(fe!=null) qM[fe]-=0.2; if(ti!=null) qM[ti]+=0.6; } else { if(fe!=null) qM[fe]+=0.25; if(ti!=null) qM[ti]+=0.85; } }   // frente: agarra o abdomen dela; meio: apoia; tras: esticadas para o chao
+      for(const perna of ['LF','LM','LH','RF','RM','RH']){ const fe=S.asas['joint_'+perna+'Femur'], ti=S.asas['joint_'+perna+'Tibia'], cx=S.asas['joint_'+perna+'Coxa']; const tipo=perna[1]; if(tipo==='F'){ if(cx!=null) qM[cx]-=0.35; if(fe!=null) qM[fe]-=0.6; if(ti!=null) qM[ti]+=1.0; } else if(tipo==='M'){ if(fe!=null) qM[fe]-=0.45; if(ti!=null) qM[ti]+=0.9; } else { if(fe!=null) qM[fe]-=0.2; if(ti!=null) qM[ti]+=0.9; } }   // frente: agarra o abdomen dela; meio: apoia; tras: esticadas para o chao
     } else if(est==='courting'){ const vib=Math.sin(tt*2*Math.PI*24)*0.22; if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=1.15+vib; qM[S.asas.joint_LWing_bate]+=vib*0.5; }   // canta com uma asa
       px+=0.15*Math.sin(tt*2*Math.PI*0.6); py+=0.25*Math.sin(tt*2*Math.PI*0.35); yaw+=0.15*Math.sin(tt*2*Math.PI*0.4);
     } else if(est==='rejected'){ const w=Math.min(1,u*1.6); pz+=1.8*Math.sin(Math.PI*w); roll=2*Math.PI*w*1.5; pitch+=Math.PI*w*0.3;   // chutado: voa para tras dando cambalhota

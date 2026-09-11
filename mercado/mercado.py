@@ -244,20 +244,18 @@ class Libido:
 
     def passo(self):
         agora = time.time(); dt = agora - self.ultimo_t; self.ultimo_t = agora
-        self.v = max(0.0, self.v - dt / 90.0)
+        self.v = max(0.0, self.v - dt / 180.0)          # decai em ~3 min: sem compras eles vao devagar, nao param
         if agora < self.chute_ate:
             novo = 'rejected'
-        elif self.v >= 0.18 or (self.estado == 'mating' and self.v >= 0.10):
-            novo = 'mating'
-        elif self.v >= 0.06:
+        elif agora < self.chute_ate + 5.0:               # depois do chute ele volta cantando por 5 s e monta de novo
             novo = 'courting'
         else:
-            novo = 'idle'
+            novo = 'mating'                              # cruzamento e o estado padrao: as compras so aceleram
         mudou = novo != self.estado; self.estado = novo
         return mudou
 
     def ritmo_hz(self):
-        return round(0.8 + 5.2 * self.v, 2)
+        return round(1.0 + 5.0 * self.v, 2)
 
     def evento(self, extra=None):
         ev = {'classe': 'sexo', 'libido': round(self.v, 3), 'estado': self.estado, 'ritmo_hz': self.ritmo_hz()}
