@@ -229,7 +229,7 @@ const CAP_HZ=150, DECAY=0.955, MIN_HEAT=0.02, RATE_WINDOW=20, ROT_FRENTE=Math.PI
 let N=0, regions=[], heat=null, active=null, nActive=0, heat2=null, active2=null, nActive2=0, heatAttr2=null, pontos2=null, helloEle=null, ultimoQuadro2=0;
 let ws=null, retry=1000, hello=null;
 let corpoUrl=null, corpoT=0, rxCount=0, rxT0=performance.now(), rxFps=0;
-let renderer=null, scene=null, camera=null, grupo=null, pontos=null, heatAttr=null, casca=null;
+let renderer=null, scene=null, camera=null, grupo=null, pontos=null, heatAttr=null, casca=null, gEla=null, gEle=null;
 let rotBase=0, rotSpeed=0.12, dragOff=0, rotX=0.08, lastInteract=-1e9, lastT=0, dragging=false, dragX=0, dragY=0;
 const $=id=>document.getElementById(id);
 const smooth={}; GROUPS.forEach(g=>smooth[g[0]]=0);
@@ -272,7 +272,7 @@ function build3D(xyz, reg, shell){
   scene=new THREE.Scene();
   camera=new THREE.PerspectiveCamera(36, 1, 0.05, 50);
   camera.position.set(0, 0.12, 2.75); camera.lookAt(0,0,0);
-  grupo=new THREE.Group(); scene.add(grupo);
+  grupo=new THREE.Group(); scene.add(grupo); gEla=new THREE.Group(); gEle=new THREE.Group(); gEla.position.x=-0.95; gEle.position.x=0.95; grupo.add(gEla); grupo.add(gEle);
   const pos=new Float32Array(N*3), col=new Float32Array(N*3), unk=regions.length-1;
   const rgb=regions.map(r=>[parseInt(r.color.slice(1,3),16)/255,parseInt(r.color.slice(3,5),16)/255,parseInt(r.color.slice(5,7),16)/255]);
   for(let i=0;i<N;i++){
@@ -296,12 +296,12 @@ function build3D(xyz, reg, shell){
         float soft=smoothstep(0.25,0.04,r2); float a=(0.16+0.95*vH)*soft;
         vec3 c=mix(vC*0.85, vec3(1.0), 0.3*vH)*(0.6+1.4*vH); gl_FragColor=vec4(c, a); }`,
     transparent:true, depthWrite:false, depthTest:true, blending:THREE.AdditiveBlending});
-  pontos=new THREE.Points(geo, mat); grupo.add(pontos);
+  pontos=new THREE.Points(geo, mat); gEla.add(pontos);
   // o cerebro dele: mesma geometria, calor proprio, lado a lado (ela a esquerda, ele a direita)
   const geo2=new THREE.BufferGeometry(); geo2.setAttribute('position', geo.getAttribute('position')); geo2.setAttribute('color', geo.getAttribute('color'));
   heatAttr2=new THREE.BufferAttribute(heat2,1); heatAttr2.setUsage(THREE.DynamicDrawUsage); geo2.setAttribute('heat', heatAttr2);
-  pontos2=new THREE.Points(geo2, mat.clone()); grupo.add(pontos2);
-  pontos.position.x=-0.95; pontos2.position.x=0.95; pontos.scale.setScalar(0.82); pontos2.scale.setScalar(0.82);
+  pontos2=new THREE.Points(geo2, mat.clone()); gEle.add(pontos2);
+  pontos.scale.setScalar(0.82); pontos2.scale.setScalar(0.82);
   if(shell){
     const dv=new DataView(shell); const nv=dv.getUint32(0,true), nf=dv.getUint32(4,true);
     const v=new Float32Array(shell, 8, nv*3); const f=new Uint32Array(shell.slice(8+nv*12, 8+nv*12+nf*12));
@@ -314,8 +314,8 @@ function build3D(xyz, reg, shell){
       vertexShader:`varying vec3 vN; varying vec3 vV; void main(){ vN=normalize(normalMatrix*normal); vec4 mv=modelViewMatrix*vec4(position,1.0); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
       fragmentShader:`uniform vec3 uColor; varying vec3 vN; varying vec3 vV; void main(){ float f=pow(1.0-abs(dot(normalize(vN),normalize(vV))),2.4); gl_FragColor=vec4(uColor*(0.35+0.9*f), 0.035+0.30*f); }`,
       transparent:true, depthWrite:false, side:THREE.DoubleSide, blending:THREE.AdditiveBlending});
-    casca=new THREE.Mesh(sg, sm); casca.position.x=-0.95; casca.scale.setScalar(0.82); grupo.add(casca);
-    const casca2=new THREE.Mesh(sg, sm.clone()); casca2.material.uniforms.uColor.value=new THREE.Color(0xff9ad5); casca2.position.x=0.95; casca2.scale.setScalar(0.82); grupo.add(casca2);
+    casca=new THREE.Mesh(sg, sm); casca.scale.setScalar(0.82); gEla.add(casca);
+    const casca2=new THREE.Mesh(sg, sm.clone()); casca2.material.uniforms.uColor.value=new THREE.Color(0xff9ad5); casca2.scale.setScalar(0.82); gEle.add(casca2);
   }
   resize();
   const el=$('brain');
@@ -353,7 +353,7 @@ function draw(ts){
   if(grupo){
     rotBase+=rotSpeed*dt;
     if(!dragging && performance.now()-lastInteract>2500){ dragOff*=Math.exp(-dt/2.0); rotX+=(0.08-rotX)*(1-Math.exp(-dt/2.0)); if(Math.abs(dragOff)<0.002) dragOff=0; }
-    grupo.rotation.y=rotBase+ROT_FRENTE+dragOff; grupo.rotation.x=rotX;
+    for(const g of [gEla,gEle]){ g.rotation.y=rotBase+ROT_FRENTE+dragOff; g.rotation.x=rotX; }
     renderer.render(scene, camera);
   }
   requestAnimationFrame(draw);
