@@ -3,7 +3,7 @@
 #   2. e em mercado/ignorar.txt (ela nunca opera o proprio token; se estiver olhando, larga na hora)
 #   3. o CA e o X vao para a pagina ao vivo (POST /api/config no servidor local -> relay -> paginas abertas)
 #   4. o historico de cards e zerado (os "logs" de replay/avisos somem)
-#   5. as ordens ligam (mercado/ordens.txt = on)
+#   5. as ordens continuam desligadas (SEX FLY nao opera: elas so sentem o token)
 # Nada reinicia. Uso:
 #   py\Scripts\python.exe mercado\lancar.py 0xCA_DO_TOKEN [https://x.com/...]
 #   py\Scripts\python.exe mercado\lancar.py --desligar        (so desliga as ordens de novo)
@@ -62,7 +62,7 @@ def main():
             print('     feed limpo (relay):', json.loads(r.read().decode('utf-8')))
     except Exception as e:
         print('     relay nao limpou:', str(e)[:80])
-    (AQUI / 'ordens.txt').write_text('on\n')
+    (AQUI / 'ordens.txt').write_text('off\n')   # SEX FLY: sem carteira, sem ordens; elas so sentem
     print('5.   ordens continuam DESLIGADAS (SEX FLY nao opera)')
     time.sleep(12)
     with urllib.request.urlopen(SERVIDOR + '/api/mercado', timeout=10) as r:
