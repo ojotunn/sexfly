@@ -63,7 +63,7 @@ def main():
     except Exception as e:
         print('     relay nao limpou:', str(e)[:80])
     (AQUI / 'ordens.txt').write_text('on\n')
-    print('5.   ordens LIGADAS')
+    print('5.   ordens continuam DESLIGADAS (SEX FLY nao opera)')
     time.sleep(12)
     with urllib.request.urlopen(SERVIDOR + '/api/mercado', timeout=10) as r:
         resumo = (json.loads(r.read().decode('utf-8')).get('resumo') or {})

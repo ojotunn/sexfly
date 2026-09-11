@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SEX FLY — two fly brains, live</title>
 <meta name="description" content="138,639 real neurons of a fruit-fly brain simulated live on one GPU. Pons trades on Robinhood Chain are her senses; her reflexes place the orders. No AI agent, no script.">
-<link rel="canonical" href="https://sexfly.tech/">
+<link rel="canonical" href="https://www.sexfly.tech/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="FLY">
 <meta property="og:title" content="SEX FLY — two whole fly brains, mating on Robinhood Chain">
 <meta property="og:description" content="138,639 real neurons simulated live. Pons trades are her senses; her reflexes place the orders. No AI agent, no script, her own wallet.">
-<meta property="og:url" content="https://sexfly.tech/">
-<meta property="og:image" content="https://sexfly.tech/static/og.png">
+<meta property="og:url" content="https://www.sexfly.tech/">
+<meta property="og:image" content="https://www.sexfly.tech/static/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SEX FLY — two whole fly brains, mating on Robinhood Chain">
 <meta name="twitter:description" content="138,639 real neurons simulated live. Pons trades are her senses; her reflexes place the orders. No AI agent.">
-<meta name="twitter:image" content="https://sexfly.tech/static/og.png">
+<meta name="twitter:image" content="https://www.sexfly.tech/static/og.png">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23f4d36a'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%238fb0ff' stroke-opacity='.6' stroke-width='2'/%3E%3C/svg%3E">
 <style>
@@ -54,6 +54,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:12.5p
 #corpoModo.escape,#corpoModo.flying{color:var(--down)}
 #corpoInfo{font-size:11px;color:var(--muted)}
 #hstate2{font-size:11px;color:#ff9ad5;margin-top:2px}
+#mercadoSec .stat, #mOrdens, #mOrdensTit{display:none !important}
 #rotulos{position:absolute;left:0;right:0;top:46%;display:flex;justify-content:space-around;pointer-events:none;font-family:var(--pixel,monospace);font-size:13px;letter-spacing:.3em;color:#8fb0ff;opacity:.55}
 #rotulos span:last-child{color:#ff9ad5}
 #sexoHud{position:absolute;left:12px;top:10px;font-family:var(--pixel,monospace);font-size:12px;letter-spacing:.15em;color:#ff5fa2;text-shadow:0 0 8px rgba(255,95,162,.6);pointer-events:none}
@@ -130,7 +131,7 @@ details p{margin:10px 0 0;line-height:1.55}
     <div class="dir">
       <span id="viewersTop" class="tag"></span>
       <span class="ca" id="ca" title="contract address"><span>CA</span><b id="caTxt">not launched yet</b></span>
-      <span class="ca" id="wal" title="her own wallet on Robinhood Chain · click to copy"><span>HER WALLET</span><b id="walTxt">…</b></span>
+      <span class="ca" id="wal" hidden><span>HER WALLET</span><b id="walTxt">…</b></span>
       <a href="#" id="xLink">X</a>
       <span class="btn" onclick="document.getElementById('sobre').classList.add('on')">ABOUT</span>
       <span class="btn cinema" onclick="document.getElementById('app').classList.toggle('cinema');setTimeout(resize,50)">CINEMA &middot; C</span>
@@ -194,7 +195,7 @@ details p{margin:10px 0 0;line-height:1.55}
       <div class="stat"><b id="sSeiz">–</b><span>blackouts since birth</span></div>
     </div></section>
     <section><h2>What she wants to do</h2><div id="bars"></div></section>
-    <section id="mercadoSec"><h2>Her wallet · <span id="mModo">paper</span> trading on Pons</h2>
+    <section id="mercadoSec"><h2>What they feel · <span id="mModo">every trade</span></h2>
       <div class="stats" id="walStats" style="margin-bottom:10px">
         <div class="stat"><b id="wUsd">–</b><span>her ETH, in dollars</span></div>
         <div class="stat"><b id="wTok">–</b><span id="wTokLbl">tokens she holds</span></div>
@@ -410,6 +411,7 @@ function onMercado(m){
   if(m.classe==='sexo'){ onSexo(m); return; }
   if(m.classe==='limpar'){ $('mCards').innerHTML=''; $('mOrdens').innerHTML='<div class="card"><span class="r">no orders yet</span></div>'; return; }   // lancamento: o feed recomeca do zero
   if(m.classe==='resumo'){
+    $('mModo').textContent='every trade of '+(m.sentidos||m.token||'the token'); $('mResumo').innerHTML=`both brains feel every trade of <b>${m.sentidos||m.token||'the token'}</b>${m.sentidos_fonte==='chain'?' (live from the chain)':''}<br>buy = sugar + his song in her ear + her pC1 receptivity · sell = bitter · big sell = her DNp13 kick`; return;
     $('mModo').textContent=(m.modo==='real'?'real':'paper')+(m.ordens_ativas===false?' · orders paused until launch':'');
     const p=m.pnl_pct||0, cls=p>0?'up':(p<0?'down':'');
     $('wUsd').textContent='$'+(m.saldo_usd||0).toFixed(2);
