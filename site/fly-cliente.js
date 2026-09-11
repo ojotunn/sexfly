@@ -75,6 +75,7 @@ window.Corpo3D=(function(){
     S.objsM=j.corpos.map(()=>{ const o=new THREE.Object3D(); o.matrixAutoUpdate=false; S.macho.add(o); return o; });
     S.objsME=j.corpos.map(()=>{ const o=new THREE.Object3D(); o.matrixAutoUpdate=false; S.espelhoM.add(o); return o; });
     j.juntas.forEach(jt=>{ if(jt.tipo===0) S.raiz=jt.qadr; if(jt.nome) S.asas[jt.nome]=jt.qadr; });
+    S.abd=j.corpos.map((c,i)=>[c.nome,i]).filter(x=>['A1A2','A3','A4','A5','A6'].includes(x[0])).map(x=>x[1]); S.abdBase=S.abd.length?S.abd[0]:-1;
     for(const g of j.geoms){
       const mk=new THREE.Mesh(geos[g.malha], mats[g.mat]); mk.matrixAutoUpdate=false; TR(g.pos,g.quat,mk.matrix); mk.renderOrder=2; S.objs[g.corpo].add(mk);
       const me=new THREE.Mesh(geos[g.malha], matsE[g.mat]); me.matrixAutoUpdate=false; me.matrix.copy(mk.matrix); me.renderOrder=0; S.objsE[g.corpo].add(me);
@@ -160,7 +161,7 @@ window.Corpo3D=(function(){
     const lib=X.libido, ritmo=X.ritmo*(1+0.25*Math.min(1,(X.dnEle.forward||0)/120));   // o cerebro dele acelera o ritmo
     let px=X.pose.p[0], py=X.pose.p[1], pz=X.pose.p[2], yaw=X.pose.yaw, pitch=X.pose.pitch, roll=0;
     const qM=S.qM; qM.set(q);
-    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.32*(0.4+0.6*lib); px+=amp*f; pz+=0.06*f; pitch+=-0.18*f; X.empurrao=amp*f*0.35; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
+    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.10*(0.4+0.6*lib); px+=amp*f; pz+=0.03*f; pitch+=-0.06*f; X.empurrao=amp*f*0.5; X.rabo=(0.55+0.35*lib)*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
       const ab=0.22+0.12*lib+0.06*Math.sin(tt*2*Math.PI*ritmo*2); if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=ab; qM[S.asas.joint_RWing_abre]+=ab; qM[S.asas.joint_LWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); qM[S.asas.joint_RWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); }
       if(S.asas.joint_Head!=null) qM[S.asas.joint_Head]+=0.15+0.1*Math.max(0,f);
       if(S.asas.joint_Proboscis!=null) qM[S.asas.joint_Proboscis]+=0.5*Math.max(0,Math.sin(tt*2*Math.PI*ritmo*0.5));   // lambe a nuca dela
@@ -176,6 +177,13 @@ window.Corpo3D=(function(){
     RM.multiply(RO);
     if(est!=='mating' && est!=='rejected'){ const e=RM.elements; e[14]=Math.max(e[14], q[a+2]*0.98); }   // no chao: nao afunda quando ela esta inclinada
     aplicarEm(qM, S.objsM, S.objsME, S.matrizM, RM);
+    if(est==='mating' && S.abdBase>=0){ balancarRabo(X.rabo||0, RM); } else X.rabo=0;
+  }
+  const PV=new THREE.Vector3(), EX=new THREE.Vector3(), RB=new THREE.Matrix4(), T1=new THREE.Matrix4(), T2=new THREE.Matrix4();
+  function balancarRabo(ang, raiz){ // gira o abdomen inteiro dele em torno do encaixe no torax, para a frente (por baixo, contra ela) e para tras
+    PV.setFromMatrixPosition(S.matrizM[S.abdBase]); EX.set(raiz.elements[4],raiz.elements[5],raiz.elements[6]).normalize();   // eixo lateral dele
+    RB.makeRotationAxis(EX, -ang); T1.makeTranslation(PV.x,PV.y,PV.z); T2.makeTranslation(-PV.x,-PV.y,-PV.z);
+    for(const b of S.abd){ const W=S.matrizM[b]; W.premultiply(T2).premultiply(RB).premultiply(T1); S.objsM[b].matrix.copy(W); S.objsME[b].matrix.copy(W); }
   }
   function sexo(ev){ const X=S.sexo; if(ev.estado && ev.estado!==X.estado){ X.estado=ev.estado; X.t_est=performance.now(); } if(typeof ev.libido==='number') X.libido=ev.libido; if(ev.ritmo_hz) X.ritmo=ev.ritmo_hz; }
   function dnEle(dn){ S.sexo.dnEle=dn||{}; }
