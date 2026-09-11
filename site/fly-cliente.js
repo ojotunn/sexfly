@@ -175,7 +175,7 @@ window.Corpo3D=(function(){
     if(est==='mating'){ calibrarEncaixe(q, qM, X, lib); if(X.cal){ px+=X.cal[0]*u; py+=X.cal[1]*u; pz+=X.cal[2]*u; } }
     // raiz do macho = raiz dela x deslocamento (no referencial dela: x para a frente, z para cima)
     montarRM(q, px,py,pz, roll,pitch,yaw);
-    if(est!=='mating' && est!=='rejected'){ const e=RM.elements; e[14]=Math.max(e[14], q[a+2]*0.98); }   // no chao: nao afunda quando ela esta inclinada
+    if(est!=='mating' && est!=='rejected'){ const a=S.raiz; const e=RM.elements; e[14]=Math.max(e[14], q[a+2]*0.98); }   // no chao: nao afunda quando ela esta inclinada
     aplicarEm(qM, S.objsM, S.objsME, S.matrizM, RM);
     if(est==='mating' && S.abdBase>=0){ balancarRabo(X.rabo||0, RM); } else X.rabo=0;
   }
