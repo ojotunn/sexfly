@@ -2,6 +2,7 @@
 # o que a tela precisa: quais neuronios dispararam, contagem por regiao e a taxa dos grupos motores.
 # Roda numa thread propria e entrega os quadros numa fila; o servidor so consome.
 import json
+import os
 import queue
 import threading
 import time
@@ -289,15 +290,38 @@ class Cerebro:
             self.thread.join(timeout=10)
         self.salvar()
 
+    def _ler_teto(self):
+        """Teto de passos por segundo (poupa a placa): variavel FLY_PASSOS_S ou o arquivo brain/data/passos_s.txt
+        (relido a cada 2 s, muda sem reiniciar). 0 = sem teto (roda o mais rapido que a placa aguenta)."""
+        teto = float(os.environ.get('FLY_PASSOS_S', '0') or 0)
+        try:
+            arq = Path(__file__).resolve().parent / 'data' / 'passos_s.txt'
+            if arq.exists():
+                teto = float(arq.read_text().strip() or 0)
+        except Exception:
+            pass
+        return max(0.0, teto)
+
     def _loop(self):
         t_quadro = time.time()
         t_salvo = t_quadro
         t_mudadas = t_quadro
         t_taxa = t_quadro
         passos_taxa = 0
+        teto = self._ler_teto(); lote = 8; t_lote = time.time(); n_lote = 0   # dorme a cada 8 passos para segurar a taxa
         while self.rodando:
             self.passo()
             passos_taxa += 1
+            if teto > 0:
+                n_lote += 1
+                if n_lote >= lote:
+                    t_lote += lote / teto
+                    atraso = t_lote - time.time()
+                    if atraso > 0:
+                        time.sleep(atraso)
+                    elif atraso < -1.0:
+                        t_lote = time.time()
+                    n_lote = 0
             agora = time.time()
             if agora - t_quadro >= self.intervalo_quadro:
                 t_quadro = agora
@@ -315,6 +339,9 @@ class Cerebro:
                 self.info['passos_por_s'] = passos_taxa / (agora - t_taxa)
                 passos_taxa = 0
                 t_taxa = agora
+                novo = self._ler_teto()
+                if novo != teto:
+                    teto = novo; t_lote = time.time(); n_lote = 0
             if self.plasticidade and agora - t_mudadas >= 30.0:
                 self.info['sinapses_mudadas'] = self._contar_mudadas()
                 t_mudadas = agora
