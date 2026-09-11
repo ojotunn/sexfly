@@ -14,7 +14,8 @@ window.Corpo3D=(function(){
   const S={pronto:false, ren:null, scene:null, cam:null, mosca:null, espelho:null, corpos:[], objs:[], objsE:[],
            juntas:[], matriz:[], q:[null,null], t:[0,0], cams:[null,null], nq:0, fovy:45, canvas:null, box:null,
            ultimo:0, qi:null, erro:null, macho:null, espelhoM:null, objsM:[], objsME:[], matrizM:[], raiz:-1, qM:null,
-           sexo:{libido:0, estado:'idle', ritmo:1, t0:performance.now(), t_est:performance.now(), pose:null, alvo:null, dnEle:{}}, asas:{}};
+           sexo:{libido:0, estado:'idle', ritmo:1, t0:performance.now(), t_est:performance.now(), pose:null, alvo:null, dnEle:{}}, asas:{},
+           aj:{raboBase:-0.12, raboAmp:0.22, pitch:-0.2, alvo:1.05}};   // ajustes da montada (medidos 11/09): abdomen dele quase reto no recuo e curvado 0,1-0,3 rad no pico, nariz para cima 0,2, ponta dele encosta 5% alem da ponta dela (sem atravessar)
   const M=new THREE.Matrix4(), M2=new THREE.Matrix4(), M3=new THREE.Matrix4(), Q=new THREE.Quaternion();
   const V=new THREE.Vector3(), V2=new THREE.Vector3(), UM=new THREE.Vector3(1,1,1);
 
@@ -155,13 +156,13 @@ window.Corpo3D=(function(){
   };
   function desenharMacho(q, tt){
     if(S.raiz<0) return;
-    const X=S.sexo; const est=X.estado; const alvo=POSES[est]||POSES.idle; const u=Math.min(1,(performance.now()-X.t_est)/700);
+    const X=S.sexo; const est=X.estado; let alvo=POSES[est]||POSES.idle; if(est==='mating') alvo={p:alvo.p, yaw:alvo.yaw, pitch:S.aj.pitch}; const u=Math.min(1,(performance.now()-X.t_est)/700);
     if(!X.pose) X.pose={p:alvo.p.slice(), yaw:alvo.yaw, pitch:alvo.pitch};
     const k=1-Math.pow(0.001, 1/60); for(let i=0;i<3;i++) X.pose.p[i]+=(alvo.p[i]-X.pose.p[i])*k*1.4; X.pose.yaw+=(alvo.yaw-X.pose.yaw)*k*1.4; X.pose.pitch+=(alvo.pitch-X.pose.pitch)*k*1.4;
     const lib=X.libido, ritmo=X.ritmo*(1+0.25*Math.min(1,(X.dnEle.forward||0)/120));   // o cerebro dele acelera o ritmo
     let px=X.pose.p[0], py=X.pose.p[1], pz=X.pose.p[2], yaw=X.pose.yaw, pitch=X.pose.pitch, roll=0;
     const qM=S.qM; qM.set(q);
-    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.10*(0.4+0.6*lib); px+=amp*f; pz+=0.03*f; pitch+=-0.06*f; X.empurrao=amp*f*0.5; X.rabo=0.32+(0.33+0.27*lib)*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
+    if(est==='mating'){ const ph=(tt*ritmo)%1; const f=ph<0.3?Math.sin(ph/0.3*Math.PI/2):Math.cos((ph-0.3)/0.7*Math.PI/2); const amp=0.10*(0.4+0.6*lib); px+=amp*f; pz+=0.03*f; pitch+=-0.06*f; X.empurrao=amp*f*0.5; X.rabo=S.aj.raboBase+(S.aj.raboAmp+0.2*lib)*f; roll=0.03*Math.sin(tt*2*Math.PI*ritmo*0.5);
       const ab=0.22+0.12*lib+0.06*Math.sin(tt*2*Math.PI*ritmo*2); if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=ab; qM[S.asas.joint_RWing_abre]+=ab; qM[S.asas.joint_LWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); qM[S.asas.joint_RWing_bate]+=0.05*Math.sin(tt*2*Math.PI*ritmo*4); }
       if(S.asas.joint_Head!=null) qM[S.asas.joint_Head]+=0.15+0.1*Math.max(0,f);
       if(S.asas.joint_Proboscis!=null) qM[S.asas.joint_Proboscis]+=0.5*Math.max(0,Math.sin(tt*2*Math.PI*ritmo*0.5));   // lambe a nuca dela
@@ -171,13 +172,30 @@ window.Corpo3D=(function(){
     } else if(est==='rejected'){ const w=Math.min(1,u*1.6); pz+=1.8*Math.sin(Math.PI*w); roll=2*Math.PI*w*1.5; pitch+=Math.PI*w*0.3;   // chutado: voa para tras dando cambalhota
       if(S.asas.joint_LWing_abre!=null){ qM[S.asas.joint_LWing_abre]+=0.9; qM[S.asas.joint_RWing_abre]+=0.9; }
     } else { py+=0.05*Math.sin(tt*2*Math.PI*0.3); if(S.asas.joint_Head!=null) qM[S.asas.joint_Head]+=0.08*Math.sin(tt*2*Math.PI*0.5); }
+    if(est==='mating'){ calibrarEncaixe(q, qM, X, lib); if(X.cal){ px+=X.cal[0]*u; py+=X.cal[1]*u; pz+=X.cal[2]*u; } }
     // raiz do macho = raiz dela x deslocamento (no referencial dela: x para a frente, z para cima)
-    const a=S.raiz; RM.compose(V.set(q[a],q[a+1],q[a+2]), Q.set(q[a+4],q[a+5],q[a+6],q[a+3]).normalize(), UM);
-    RO.compose(V.set(px,py,pz), RQ.setFromEuler(RE.set(roll,pitch,yaw,'ZYX')), V2.set(0.9,0.9,0.9));
-    RM.multiply(RO);
+    montarRM(q, px,py,pz, roll,pitch,yaw);
     if(est!=='mating' && est!=='rejected'){ const e=RM.elements; e[14]=Math.max(e[14], q[a+2]*0.98); }   // no chao: nao afunda quando ela esta inclinada
     aplicarEm(qM, S.objsM, S.objsME, S.matrizM, RM);
     if(est==='mating' && S.abdBase>=0){ balancarRabo(X.rabo||0, RM); } else X.rabo=0;
+  }
+  function montarRM(q, px,py,pz, roll,pitch,yaw){ const a=S.raiz; RM.compose(V.set(q[a],q[a+1],q[a+2]), Q.set(q[a+4],q[a+5],q[a+6],q[a+3]).normalize(), UM); RO.compose(V.set(px,py,pz), RQ.setFromEuler(RE.set(roll,pitch,yaw,'ZYX')), V2.set(0.9,0.9,0.9)); RM.multiply(RO); return RM; }
+  const PA=new THREE.Vector3(), PB=new THREE.Vector3(), PC=new THREE.Vector3(), PD=new THREE.Vector3();
+  // Encaixe: no PICO da estocada (f=1) a ponta do abdomen dele encosta na ponta do abdomen dela, sem atravessar.
+  // Mede num passo extra (pose no pico) e guarda o ajuste de posicao no referencial dela; refaz a cada 20 quadros.
+  function calibrarEncaixe(q, qM, X, lib){
+    if(S.abd.length<5) return;
+    if(!X.cal) X.cal=[0,0,0];
+    X.calN=(X.calN||0)+1; if(X.calN%20!==1) return;
+    const ampP=0.10*(0.4+0.6*lib);
+    montarRM(q, X.pose.p[0]+ampP+X.cal[0], X.pose.p[1]+X.cal[1], X.pose.p[2]+0.03+X.cal[2], 0, X.pose.pitch-0.06, X.pose.yaw);
+    aplicarEm(qM, S.objsM, S.objsME, S.matrizM, RM); balancarRabo(S.aj.raboBase+S.aj.raboAmp+0.2*lib, RM);
+    const a5=S.abd[3], a6=S.abd[4];
+    PA.setFromMatrixPosition(S.matrizM[a6]); PB.setFromMatrixPosition(S.matrizM[a5]); PB.sub(PA); PA.addScaledVector(PB, -1.0);    // ponta dele = A6 + (A6-A5)
+    PC.setFromMatrixPosition(S.matriz[a6]); PD.setFromMatrixPosition(S.matriz[a5]); PD.sub(PC); PC.addScaledVector(PD, -S.aj.alvo);    // alvo: quase a ponta dela (encosta, nao atravessa)
+    PC.sub(PA);                                                                                                          // ajuste no mundo
+    const a=S.raiz; Q.set(q[a+4],q[a+5],q[a+6],q[a+3]).normalize().invert(); PC.applyQuaternion(Q);                     // no referencial dela
+    X.cal[0]+=PC.x; X.cal[1]+=PC.y*0.5; X.cal[2]+=PC.z;
   }
   const PV=new THREE.Vector3(), EX=new THREE.Vector3(), RB=new THREE.Matrix4(), T1=new THREE.Matrix4(), T2=new THREE.Matrix4();
   function balancarRabo(ang, raiz){ // gira o abdomen inteiro dele em torno do encaixe no torax, para a frente (por baixo, contra ela) e para tras
@@ -185,7 +203,7 @@ window.Corpo3D=(function(){
     RB.makeRotationAxis(EX, -ang); T1.makeTranslation(PV.x,PV.y,PV.z); T2.makeTranslation(-PV.x,-PV.y,-PV.z);
     for(const b of S.abd){ const W=S.matrizM[b]; W.premultiply(T2).premultiply(RB).premultiply(T1); S.objsM[b].matrix.copy(W); S.objsME[b].matrix.copy(W); }
   }
-  function sexo(ev){ const X=S.sexo; if(ev.estado && ev.estado!==X.estado){ X.estado=ev.estado; X.t_est=performance.now(); } if(typeof ev.libido==='number') X.libido=ev.libido; if(ev.ritmo_hz && ev.ritmo_hz!==X.ritmo){ const ag=performance.now(); const ph=(((ag-X.t0)/1000*X.ritmo)%1+1)%1; X.ritmo=ev.ritmo_hz; X.t0=ag-ph/X.ritmo*1000; } }
+  function sexo(ev){ const X=S.sexo; if(ev.estado && ev.estado!==X.estado){ X.estado=ev.estado; X.t_est=performance.now(); X.calN=0; } if(typeof ev.libido==='number') X.libido=ev.libido; if(ev.ritmo_hz && ev.ritmo_hz!==X.ritmo){ const ag=performance.now(); const ph=(((ag-X.t0)/1000*X.ritmo)%1+1)%1; X.ritmo=ev.ritmo_hz; X.t0=ag-ph/X.ritmo*1000; } }
   function dnEle(dn){ S.sexo.dnEle=dn||{}; }
   return {init, quadro, sexo, dnEle, tick:loop, estado:S};
 })();
